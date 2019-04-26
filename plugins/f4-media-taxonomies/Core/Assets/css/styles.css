@@ -1,0 +1,46 @@
+/* MEDIA FILTERS */
+.media-frame .media-toolbar-secondary {
+	display: flex;
+}
+
+.media-frame.mode-edit .media-toolbar-secondary {
+	align-items: center;
+	max-width: none;
+}
+
+.media-frame.mode-edit .media-toolbar-secondary .view-switch {
+	flex: 1 0 auto;
+}
+
+.media-frame.mode-grid .spinner {
+	margin-top: 0;
+}
+
+.media-toolbar .spinner {
+	flex: 0 0 20px;
+}
+
+/* SELECTIZE */
+.selectize-control.multi .selectize-input > div,
+.selectize-control.multi .selectize-input > div.active {
+	border-width: 1px;
+	border-radius: 3px;
+}
+
+.compat-item tr.compat-field-selectize {
+	display: table-row;
+	overflow: auto;
+}
+
+.compat-item tr.compat-field-selectize .selectize-input {
+	min-height: 38px;
+}
+
+.compat-item tr.compat-field-selectize > td.field {
+	margin-bottom: 5px;
+}
+
+.selectize-input .parent-label,
+.selectize-dropdown-content .parent-label {
+	color: #BBBBBB;
+}
