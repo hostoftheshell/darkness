@@ -35,10 +35,17 @@
 			for(var i=evt.click.length-1; i>=0; i--){
 				var handler=evt.click[i];
 				if(handler && handler.namespace != "mPS2id"){
-					if(handler.selector==='a[href*="#"]'){
+					if(handler.selector==='a[href*=#]'){
+						handler.selector='a[href*=#]:not(._mPS2id-h)';
+					}else if(handler.selector==='a[href*="#"]'){
 						handler.selector='a[href*="#"]:not(._mPS2id-h)';
 					}else if(handler.selector==='a[href*=#]:not([href=#])'){
 						handler.selector='a[href*=#]:not([href=#]):not(._mPS2id-h)';
+					}else if(handler.selector==='a[href*="#"]:not([href="#"])'){
+						handler.selector='a[href*="#"]:not([href="#"]):not(._mPS2id-h)';
+					}else if(handler.selector && handler.selector.indexOf("mobmenu")!==-1){
+						//special cases
+						s.off("click");
 					}else{
 						s.off("click",handler.handler);
 					}
@@ -46,11 +53,29 @@
 			}
 		},
 		autoSelectors="a[data-ps2id-api='true'][href*='#'],.ps2id > a[href*='#'],a.ps2id[href*='#']";
-	$(document).ready(function(){
+	$(function(){ //doc ready
 		for(var k=0; k<_o.total_instances; k++){
+			//generate id from class name (e.g. class ps2id-id-myid gives element the id myid)
+			var c2iSel=$("[class*='ps2id-id-']");
+			if(c2iSel.length){
+				c2iSel.each(function(){
+					var c2i=$(this),
+						c2iClasses=c2i.attr("class").split(" "),
+						c2iVal;
+					if(!c2i.attr("id")){
+						for(var c2iClass in c2iClasses){
+							if(String(c2iClasses[c2iClass]).match(/^ps2id-id-\S+$/)){
+								c2iVal=c2iClasses[c2iClass].split("ps2id-id-")[1];
+								if(!$("#"+c2iVal).length) c2i.attr("id",c2iVal);
+								break;
+							}
+						}
+					}
+				});
+			}
 			//scroll to location hash on page load
 			if(_o.instances[_p+"_instance_"+k]["scrollToHash"]==="true" && _hash){
-				$(_o.instances[_p+"_instance_"+k]["selector"]+",."+shortcodeClass+","+autoSelectors).each(function(){
+				$(_o.instances[_p+"_instance_"+k]["selector"]+",."+shortcodeClass+","+autoSelectors).not(_o.instances[_p+"_instance_"+k]["excludeSelector"]).each(function(){
 					$(this).data(_p+"Element",true);
 				});
 				if(_validateLocHash(_hash,_o.instances[_p+"_instance_"+k]["scrollToHashForAll"]==="true")){
@@ -64,11 +89,40 @@
 				}
 			}
 		}
+		//1.6.7
+		//overwrite CSS scroll-behavior rule (https://developer.mozilla.org/en-US/docs/Web/CSS/scroll-behavior) in order to have proper smooth scrolling animation (duration, easing etc.)
+		$("html").css("scroll-behavior","auto");
+		//WordPress TwentyTwenty theme introduced its own (anonymous) smooth scrolling function which we need to disable (later versions of TwentyTwenty use CSS scroll-behavior rule) 
+		if(window.twentytwenty && window.twentytwenty.smoothScroll) window.twentytwenty.smoothScroll=null;
 	});
-	$(window).on("load",function(){
+	$(window).on("load",function(){ //win load
 		for(var i=0; i<_o.total_instances; i++){
+			//check for selector without quotes which is invalid without jquery migrate or jquery 3.x and display a warning
+			if(_o.instances[_p+"_instance_"+i]["selector"].indexOf("a[href*=#]:not([href=#])") >= 0){
+				//var quotedSel=_o.instances[_p+"_instance_"+i]["selector"].replace("a[href*=#]:not([href=#])", "a[href*='#']:not([href='#'])");
+				//_o.instances[_p+"_instance_"+i]["selector"]=quotedSel;
+				console.log("ps2id selector issue: a[href*=#]:not([href=#]) selector needs quotes");
+			}
+			if(_o.instances[_p+"_instance_"+i]["excludeSelector"].indexOf("a[href*=#]:not([href=#])") >= 0){
+				console.log("ps2id excluded selector issue: a[href*=#]:not([href=#]) selector needs quotes");
+			}
 			var sel=$(_o.instances[_p+"_instance_"+i]["selector"]+",."+shortcodeClass+","+autoSelectors),
 				autoCorrectScrollOpt=_o.instances[_p+"_instance_"+i]["autoCorrectScroll"],autoCorrectScroll=0;
+			//1.6.7
+			//ps2id special parameters (these overwrite the ones in plugin settings) 
+			//usage: <script>window.ps2id_special_params={ scrollSpeed: 500 }</script> 
+			//the script should be added in head tag
+			if(window.ps2id_special_params){
+				if(window.ps2id_special_params.highlightSelector) _o.instances[_p+"_instance_"+i]["highlightSelector"]=window.ps2id_special_params.highlightSelector;
+				if(window.ps2id_special_params.scrollSpeed) _o.instances[_p+"_instance_"+i]["scrollSpeed"]=window.ps2id_special_params.scrollSpeed;
+				if(window.ps2id_special_params.scrollEasing) _o.instances[_p+"_instance_"+i]["scrollEasing"]=window.ps2id_special_params.scrollEasing;
+				if(typeof window.ps2id_special_params.forceSingleHighlight !== "undefined") _o.instances[_p+"_instance_"+i]["forceSingleHighlight"]=window.ps2id_special_params.forceSingleHighlight;
+				if(typeof window.ps2id_special_params.keepHighlightUntilNext !== "undefined") _o.instances[_p+"_instance_"+i]["keepHighlightUntilNext"]=window.ps2id_special_params.keepHighlightUntilNext;
+				if(typeof window.ps2id_special_params.appendHash !== "undefined") _o.instances[_p+"_instance_"+i]["appendHash"]=window.ps2id_special_params.appendHash;
+				if(window.ps2id_special_params.layout) _o.instances[_p+"_instance_"+i]["layout"]=window.ps2id_special_params.layout;
+				if(window.ps2id_special_params.offset) _o.instances[_p+"_instance_"+i]["offset"]=window.ps2id_special_params.offset;
+			}
+			//-----
 			sel.mPageScroll2id({
 				scrollSpeed:_o.instances[_p+"_instance_"+i]["scrollSpeed"],
 				autoScrollSpeed:(_o.instances[_p+"_instance_"+i]["autoScrollSpeed"]==="true") ? true : false,
@@ -94,7 +148,10 @@
 						if(mPS2id.clicked.length) mPS2id.clicked.trigger("click.mPS2id");
 						autoCorrectScroll=0;
 					}
-				}
+				},
+				excludeSelectors:_o.instances[_p+"_instance_"+i]["excludeSelector"],
+				encodeLinks:(_o.instances[_p+"_instance_"+i]["encodeLinks"]==="true") ? true : false,
+				liveSelector:_o.instances[_p+"_instance_"+i]["selector"]+",."+shortcodeClass+","+autoSelectors
 			});
 			//scroll to location hash on page load
 			if(_o.instances[_p+"_instance_"+i]["scrollToHash"]==="true" && _hash){

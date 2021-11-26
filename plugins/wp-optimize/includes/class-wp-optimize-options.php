@@ -24,11 +24,11 @@ class WP_Optimize_Options {
 	 *
 	 * @return string
 	 */
-	public function admin_page_url() {
+	public function admin_page_url($page = 'WP-Optimize') {
 		if (is_multisite()) {
-			return network_admin_url('admin.php?page=WP-Optimize');
+			return network_admin_url('admin.php?page='.$page);
 		} else {
-			return admin_url('admin.php?page=WP-Optimize');
+			return admin_url('admin.php?page='.$page);
 		}
 	}
 
@@ -72,12 +72,11 @@ class WP_Optimize_Options {
 	/**
 	 * Update WP-Optimize option value.
 	 *
-	 * @param string $option    Option name.
-	 * @param mixed  $value     Option value.
-	 * @param bool   $use_cache
+	 * @param string $option Option name.
+	 * @param mixed  $value  Option value.
 	 * @return bool
 	 */
-	public function update_option($option, $value, $use_cache = true) {
+	public function update_option($option, $value) {
 		if (is_multisite()) {
 			return update_site_option('wp-optimize-mu-'.$option, $value);
 		} else {
@@ -165,8 +164,6 @@ class WP_Optimize_Options {
 
 	
 	public function save_settings($settings) {
-		$optimizer = WP_Optimize()->get_optimizer();
-	
 		$output = array('messages' => array(), 'errors' => array());
 		if (!empty($settings["enable-schedule"])) {
 			$this->update_option('schedule', 'true');
@@ -235,7 +232,9 @@ class WP_Optimize_Options {
 		$this->update_option('logging-additional', $logger_options);
 
 		// Save selected optimization settings.
-		$this->save_sent_manual_run_optimization_options($settings, true, false);
+		if (isset($settings['optimization-options'])) {
+			$this->save_sent_manual_run_optimization_options($settings['optimization-options'], false, false);
+		}
 
 		// Save auto backup option value.
 		$enable_auto_backup = (isset($settings['enable-auto-backup']) ? 'true' : 'false');
@@ -252,6 +251,46 @@ class WP_Optimize_Options {
 
 		return $output;
 
+	}
+
+	/**
+	 * Wipe all options from database options tables.
+	 *
+	 * @return bool|false|int
+	 */
+	public function wipe_settings() {
+		global $wpdb;
+
+		$keys = '"' . implode('", "', $this->get_additional_settings_keys()) . '"';
+
+		if (is_multisite()) {
+			$result = $wpdb->query("DELETE FROM {$wpdb->sitemeta} WHERE `meta_key` LIKE 'wp-optimize-mu-%' OR `meta_key` IN ({$keys})");
+		} else {
+			$result = $wpdb->query("DELETE FROM {$wpdb->options} WHERE `option_name` LIKE 'wp-optimize-%' OR `option_name` IN ({$keys})");
+		}
+
+		wp_cache_flush();
+
+		// disable cache and clean any information related to WP-Optimize Cache.
+		WPO_Page_Cache::instance()->clean_up();
+		// delete settings from .htaccess
+		WP_Optimize::get_browser_cache()->disable();
+		WP_Optimize::get_gzip_compression()->disable();
+
+		return $result;
+	}
+
+	/**
+	 * Get list of WP-Optimize settings database keys which are don't use default `wp-optimize-` prefix.
+	 *
+	 * @return array
+	 */
+	public function get_additional_settings_keys() {
+		return array(
+			'wpo_cache_config',
+			'wpo_minify_config',
+			'wpo_update_version',
+		);
 	}
 
 	/**
@@ -316,7 +355,7 @@ class WP_Optimize_Options {
 		foreach ($optimizations as $optimization_id => $optimization) {
 			// In current code, not all options can be saved.
 			// Revisions, drafts, spams, unapproved, optimize.
-			if ($available_for_saving_only && empty($optimization->available_for_saving)) continue;
+			if (is_wp_error($optimization) || ($available_for_saving_only && empty($optimization->available_for_saving))) continue;
 			$setting_id = $optimization->get_setting_id();
 			$id_in_sent = (($use_dom_id) ? $optimization->get_dom_id() : $optimization_id);
 			// 'true' / 'false' are indeed strings here; this is the historical state. It may be possible to change later using our abstraction interface.
@@ -391,6 +430,7 @@ class WP_Optimize_Options {
 			$new_settings = array();
 
 			foreach ($optimizations as $optimization) {
+				if (is_wp_error($optimization)) continue;
 				$setting_id = $optimization->get_setting_id();
 
 				$new_settings[$setting_id] = empty($optimization->setting_default) ? 'false' : 'true';
@@ -409,7 +449,7 @@ class WP_Optimize_Options {
 		// Save additional auto backup option values.
 		foreach ($settings as $key => $value) {
 			if (preg_match('/enable\-auto\-backup\-/', $key)) {
-				$value = ('0' != $value) ? 'true' : 'false';
+				$value = ('true' == $value) ? 'true' : 'false';
 				$this->update_option($key, $value);
 			}
 		}

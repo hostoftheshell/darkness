@@ -16,9 +16,12 @@
 	<div id="helloworld" class="panel-content">
 		<div class="wrap content-front-page-wrap">
 			<header class="entry-header">
-				<?php the_title( '<h2 class="entry-title">', '</h2>' ); ?>
-
-				<?php twentyseventeen_edit_link( get_the_ID() ); ?>
+				<?php
+				/**
+				* * darkness tweak : Remove <?php the_title( '<h2 class="entry-title">', '</h2>' ); ?> from header <header class="entry-header">
+				*/
+				
+				twentyseventeen_edit_link( get_the_ID() ); ?>
 
 			</header><!-- .entry-header -->
 

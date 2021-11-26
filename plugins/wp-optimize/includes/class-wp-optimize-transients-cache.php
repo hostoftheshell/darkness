@@ -17,7 +17,6 @@ class WP_Optimize_Transients_Cache {
 	 * WP_Optimize_Transients_Cache constructor.
 	 */
 	public function __construct() {
-
 	}
 
 	/**
@@ -42,7 +41,7 @@ class WP_Optimize_Transients_Cache {
 	 * @param int    $expiration
 	 */
 	public function set($key, &$value, $expiration = 0) {
-		$keep_free_mem = $this->_keep_free_mem ? $this->_keep_free_mem : 16 * MB_IN_BYTES;
+		$keep_free_mem = $this->_keep_free_mem ? $this->_keep_free_mem : 16 * 1048576;
 
 		$used_memory = memory_get_usage();
 		$free_memory = WP_Optimize()->get_free_memory();
@@ -95,11 +94,7 @@ class WP_Optimize_Transients_Cache {
 			unset($this->_cache[$key], $this->_expiration[$key]);
 		}
 
-		if (WP_Optimize()->is_multisite_mode()) {
-			delete_site_transient($key);
-		} else {
-			delete_transient($key);
-		}
+		$this->delete_transient($key);
 	}
 
 	/**
@@ -131,6 +126,19 @@ class WP_Optimize_Transients_Cache {
 		}
 
 		return $value;
+	}
+
+	/**
+	 * Delete transient.
+	 *
+	 * @param string $key
+	 */
+	public function delete_transient($key) {
+		if (WP_Optimize()->is_multisite_mode()) {
+			delete_site_transient($key);
+		} else {
+			delete_transient($key);
+		}
 	}
 
 	/**

@@ -28,7 +28,7 @@ class Drknss_Navigation_Widget extends WP_Widget {
 	// Create the Widget Outputs for the Current Recent Post Widget Instance.
 	public function widget( $args, $instance ) {?>
       
-		<div class="drknss-site-header" role="menu">
+		<div id="drknss" class="drknss-site-header" role="menu">
 			<?php if ( has_nav_menu( 'left' ) ) : ?>
 				<div class="navigation-left">
 					<div class="drknss-wrap">
@@ -37,6 +37,7 @@ class Drknss_Navigation_Widget extends WP_Widget {
 				</div><!-- .navigation-left -->
 			<?php endif; ?>
 		</div><!-- .drknss-site-header -->
+		
 		<?php
 	}
 }

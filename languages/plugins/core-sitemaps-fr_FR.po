@@ -1,0 +1,61 @@
+# Translation of Plugins - Core Sitemaps - Stable (latest release) in French (France)
+# This file is distributed under the same license as the Plugins - Core Sitemaps - Stable (latest release) package.
+msgid ""
+msgstr ""
+"PO-Revision-Date: 2020-03-11 22:51:09+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n > 1;\n"
+"X-Generator: GlotPress/3.0.0-alpha\n"
+"Language: fr\n"
+"Project-Id-Version: Plugins - Core Sitemaps - Stable (latest release)\n"
+
+#: inc/class-wp-sitemaps-stylesheet.php:50
+#: inc/class-wp-sitemaps-stylesheet.php:160
+msgid "https://www.sitemaps.org/"
+msgstr "https://www.sitemaps.org/"
+
+#: inc/class-wp-sitemaps-stylesheet.php:46
+#: inc/class-wp-sitemaps-stylesheet.php:156
+msgid "XML Sitemap"
+msgstr "Plan de site XML"
+
+#: inc/class-wp-sitemaps-renderer.php:262
+msgid "WordPress &rsaquo; Error"
+msgstr "WordPress &rsaquo; Erreur"
+
+#. translators: %s: SimpleXML
+#: inc/class-wp-sitemaps-renderer.php:259
+msgid "Could not generate XML sitemap due to missing %s extension"
+msgstr "Impossible de générer le plan de site XML à cause d’une extension %s manquante"
+
+#: inc/class-wp-sitemaps-stylesheet.php:62
+#: inc/class-wp-sitemaps-stylesheet.php:172
+msgid "Last Modified"
+msgstr "Dernière modification"
+
+#: inc/class-wp-sitemaps-stylesheet.php:61
+#: inc/class-wp-sitemaps-stylesheet.php:171
+msgid "URL"
+msgstr "URL"
+
+#. Author URI of the plugin
+msgid "https://github.com/GoogleChromeLabs/wp-sitemaps/graphs/contributors"
+msgstr "https://github.com/GoogleChromeLabs/wp-sitemaps/graphs/contributors"
+
+#. Author of the plugin
+msgid "Core Sitemaps Plugin Contributors"
+msgstr "Contributeurs de l’extension Core Sitemaps"
+
+#. Description of the plugin
+msgid "A feature plugin to integrate basic XML Sitemaps in WordPress Core"
+msgstr "Une extension de fonctionnalités pour intégrer des plans de site XML basiques dans le cœur WordPress"
+
+#. Plugin URI of the plugin
+msgid "https://github.com/GoogleChromeLabs/wp-sitemaps"
+msgstr "https://github.com/GoogleChromeLabs/wp-sitemaps"
+
+#. Plugin Name of the plugin
+msgid "Core Sitemaps"
+msgstr "Core Sitemaps"

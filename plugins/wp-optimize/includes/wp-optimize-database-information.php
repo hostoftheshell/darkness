@@ -8,7 +8,6 @@ class WP_Optimize_Database_Information {
 	const MARIA_DB = 'MariaDB';
 	const PERCONA_DB = 'Percona';
 	// for some reason coding standard parser give error here WordPress.DB.RestrictedFunctions.mysql_mysql_db
-	// @codingStandardsIgnoreLine
 	const MYSQL_DB = 'MysqlDB';
 
 	const MYISAM_ENGINE = 'MyISAM';
@@ -94,8 +93,7 @@ class WP_Optimize_Database_Information {
 	 * @return bool|mixed
 	 */
 	public function get_table_status($table_name, $update = false) {
-
-		$tables_info = $this->get_show_table_status($update);
+		$tables_info = $this->get_show_table_status($update, $table_name);
 
 		foreach ($tables_info as $table_info) {
 			if ($table_name == $table_info->Name) return $table_info;
@@ -110,12 +108,21 @@ class WP_Optimize_Database_Information {
 	 * @param bool $update refresh or no cached data
 	 * @return array
 	 */
-	public function get_show_table_status($update = false) {
+	public function get_show_table_status($update = false, $table_name = '') {
 		global $wpdb;
 		static $tables_info = array();
+		static $fetched_all_tables = false;
 
-		if ($update || empty($tables_info) || !is_array($tables_info)) {
-			$tables_info = $wpdb->get_results('SHOW TABLE STATUS');
+		// If a table name is provided, and the whole record hasn't been fetched yet, only fetch the information for the current table.
+		// This allows for a big preformance gain when using WP-CLI or doing single optimizations.
+		if ($table_name && !$fetched_all_tables) {
+			$sql = $wpdb->prepare("SHOW TABLE STATUS LIKE '%s'", $table_name);
+			$tables_info = $wpdb->get_results($sql);
+		} else {
+			if ($update || empty($tables_info) || !is_array($tables_info) || !$fetched_all_tables) {
+				$tables_info = $wpdb->get_results('SHOW TABLE STATUS');
+				$fetched_all_tables = true;
+			}
 		}
 
 		// If option innodb_file_per_table is disabled then Data_free column will have summary overhead value for all table.
@@ -128,6 +135,16 @@ class WP_Optimize_Database_Information {
 		}
 
 		return $tables_info;
+	}
+
+	/**
+	 * Whether a table exists
+	 *
+	 * @return boolean
+	 */
+	public function table_exists($table_name, $use_default_prefix = true) {
+		global $wpdb;
+		return null !== $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($use_default_prefix ? $wpdb->prefix.$table_name : $table_name)));
 	}
 
 	/**
@@ -382,6 +399,8 @@ class WP_Optimize_Database_Information {
 	public function is_table_needing_repair($table_name) {
 		$table_statuses = $this->check_all_tables();
 
+		if (!$this->is_table_type_repair_supported($table_name)) return false;
+
 		if (is_array($table_statuses) && array_key_exists($table_name, $table_statuses) && $table_statuses[$table_name]['corrupted']) {
 			return true;
 		} else {
@@ -419,7 +438,9 @@ class WP_Optimize_Database_Information {
 	 * @return array
 	 */
 	private function get_all_plugin_tables_relationship() {
-		static $plugin_tables;
+		static $plugin_tables = array();
+
+		if (!empty($plugin_tables)) return $plugin_tables;
 
 		$wp_core_tables = array(
 			'blogs',
@@ -442,14 +463,20 @@ class WP_Optimize_Database_Information {
 			'sitemeta',
 		);
 
-		if (is_array($plugin_tables)) return $plugin_tables;
-
-		$plugin_tables_json_file = WPO_PLUGIN_MAIN_PATH.'/plugin.json';
-		$plugin_tables = array();
+		$plugin_tables_json_file = $this->get_plugin_json_file_path();
+		$fallback_plugin_tables_json_file = WPO_PLUGIN_MAIN_PATH.'plugin.json';
 
 		if (is_file($plugin_tables_json_file) && is_readable($plugin_tables_json_file)) {
 			// get data from plugin.json file.
 			$plugin_tables = json_decode(file_get_contents($plugin_tables_json_file), true);
+		}
+
+		// Fallback to the bundled version if the list is empty
+		if (empty($plugin_tables)) {
+			if (is_file($fallback_plugin_tables_json_file) && is_readable($fallback_plugin_tables_json_file)) {
+				// get data from the bundled plugin.json file.
+				$plugin_tables = json_decode(file_get_contents($fallback_plugin_tables_json_file), true);
+			}
 		}
 
 		foreach ($wp_core_tables as $table) {
@@ -481,6 +508,16 @@ class WP_Optimize_Database_Information {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get the path where the updated plugin.json is stored
+	 *
+	 * @return string
+	 */
+	private function get_plugin_json_file_path() {
+		$uploads_dir = wp_upload_dir(null, false);
+		return apply_filters('wpo_get_plugin_json_file_path', trailingslashit($uploads_dir['basedir']).'wpo-plugins-tables-list.json');
 	}
 
 	/**
@@ -547,5 +584,22 @@ class WP_Optimize_Database_Information {
 			'installed' => $installed,
 			'active' => $active,
 		);
+	}
+
+	/**
+	 * Update list in plugin.json, if necessary
+	 *
+	 * @return void
+	 */
+	public function update_plugin_json() {
+		// Add the possibility to turn this off.
+		if (!apply_filters('wpo_update_plugin_json', true)) return;
+
+		$update_request = wp_remote_get('https://plugins.svn.wordpress.org/wp-optimize/trunk/plugin.json', array('timeout' => 3000));
+		if (200 !== wp_remote_retrieve_response_code($update_request)) return;
+		$json_content = wp_remote_retrieve_body($update_request);
+		if (json_decode($json_content)) {
+			file_put_contents($this->get_plugin_json_file_path(), $json_content);
+		}
 	}
 }

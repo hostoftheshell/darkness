@@ -155,6 +155,29 @@
 		Plugin specific js --edit--
 		--------------------
 		*/
+
+		//check for selector without quotes which is invalid without jquery migrate or jquery 3.x and display a warning
+		var mps2idSelectorInput=$("input#page_scroll_to_id_0_selector"),
+			mps2idSelectorDesc=mps2idSelectorInput.parent().children(".description"),
+			mps2idExcludedSelectorInput=$("input#page_scroll_to_id_0_excludeSelector"),
+			mps2idExcludedSelectorDesc=mps2idExcludedSelectorInput.parent().children(".description");
+		if(mps2idSelectorInput.length && mps2idSelectorDesc.length){
+			if(mps2idSelectorInput.val().indexOf("a[href*=#]:not([href=#])") >= 0){
+				var mps2idSelectorInputQuoted=mps2idSelectorInput.val().replace("a[href*=#]:not([href=#])", "a[href*='#']:not([href='#'])");
+				mps2idSelectorDesc.prepend("<small style='color:red'>It seems that you're using an older selector which might cause issues with the latest versions of WordPress. If you have such issues, change \"Selector(s)\" option value to: </small><br /><code>"+mps2idSelectorInputQuoted+"</code><br />");
+			}
+		}
+		if(mps2idExcludedSelectorInput.length && mps2idExcludedSelectorDesc.length){
+			if(mps2idExcludedSelectorInput.val().indexOf("a[href*=#]:not([href=#])") >= 0){
+				var mps2idExcludedSelectorInputQuoted=mps2idExcludedSelectorInput.val().replace("a[href*=#]:not([href=#])", "a[href*='#']:not([href='#'])");
+				mps2idExcludedSelectorDesc.prepend("<small style='color:red'>It seems that you're using a selector which might cause issues with the latest versions of WordPress. If you have such issues, change \"selectors are excluded\" value to: </small><br /><code>"+mps2idExcludedSelectorInputQuoted+"</code><br />");
+			}
+		}
+
+		$(".mPS2id-show-option-common-values").click(function(e){
+			e.preventDefault();
+			$(this).next("span").toggleClass("mPS2id-show");
+		});
 		
 		$(".mPS2id-open-help").click(function(e){
 			e.preventDefault();

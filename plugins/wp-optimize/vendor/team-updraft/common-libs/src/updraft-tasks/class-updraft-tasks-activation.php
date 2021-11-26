@@ -24,11 +24,12 @@ class Updraft_Tasks_Activation {
 	 */
 	private static $db_updates = array(
 		'0.0.1' => array('create_tables'),
-		'1.0.1' => array('updates_for_smush')
+		'1.0.1' => array('add_attempts_and_class_identifier'),
+		'1.1' => array('add_lock_column'),
 	);
 
 
-	const UPDRAFT_TASKS_VERSION = '1.0.1';
+	const UPDRAFT_TASKS_DB_VERSION = '1.1';
 
 	/**
 	 * Initialise this class
@@ -43,7 +44,48 @@ class Updraft_Tasks_Activation {
 	public static function install() {
 		self::init_db();
 		self::create_tables();
-		update_option('updraft_task_manager_dbversion', self::get_version());
+		// we need walk through all updates when install at first.
+		self::check_updates();
+	}
+
+	/**
+	 * Check needed tables in data base and if one of them doesn't exist force reinstall.
+	 */
+	public static function reinstall_if_needed() {
+		static $done = false;
+
+		if ($done) return;
+
+		if (!self::check_if_tables_exist()) self::reinstall();
+
+		$done = true;
+	}
+
+	/**
+	 * Drop database version variable from option from database and run install again.
+	 */
+	public static function reinstall() {
+		delete_option('updraft_task_manager_dbversion');
+		self::install();
+	}
+
+	/**
+	 * Check if needed task manager tables exist.
+	 *
+	 * @return bool
+	 */
+	public static function check_if_tables_exist() {
+		global $wpdb;
+		$our_prefix = $wpdb->base_prefix.self::$table_prefix;
+		$tables = array($our_prefix.'tasks', $our_prefix.'taskmeta');
+
+		foreach ($tables as $table) {
+			$query = "SHOW TABLES LIKE '{$table}'";
+			$tables = $wpdb->get_results($query, ARRAY_A);
+			if (!is_array($tables) || 0 == count($tables)) return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -74,7 +116,7 @@ class Updraft_Tasks_Activation {
 	 * Returns the current version of the plugin
 	 */
 	public static function get_version() {
-		return self::UPDRAFT_TASKS_VERSION;
+		return self::UPDRAFT_TASKS_DB_VERSION;
 	}
 
 	/**
@@ -131,7 +173,7 @@ class Updraft_Tasks_Activation {
 		dbDelta($create_tables);
 	}
 
-	public static function updates_for_smush() {
+	public static function add_attempts_and_class_identifier() {
 		$wpdb = $GLOBALS['wpdb'];
 		$our_prefix = $wpdb->base_prefix.self::$table_prefix;
 
@@ -140,6 +182,13 @@ class Updraft_Tasks_Activation {
 		$wpdb->query("ALTER TABLE ".$our_prefix."tasks ADD attempts INT DEFAULT 0 AFTER type");
 		$wpdb->query("ALTER TABLE ".$our_prefix."tasks ADD class_identifier varchar(300) DEFAULT 0 AFTER type");
 	}
+	
+	public static function add_lock_column() {
+		$wpdb = $GLOBALS['wpdb'];
+		$our_prefix = $wpdb->base_prefix.self::$table_prefix;
+		$wpdb->query('ALTER TABLE '.$our_prefix.'tasks ADD last_locked_at BIGINT DEFAULT 0 AFTER time_created');
+	}
+
 }
 
 endif;

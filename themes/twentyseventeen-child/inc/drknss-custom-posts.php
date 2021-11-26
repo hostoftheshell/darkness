@@ -20,8 +20,8 @@ function drknss_create_post_type() {
         'menu_position' => 30,
         'has_archive'   => true,
         'supports'      => array (
-            'title',
-            'custom-fields'
+            'custom-fields',
+           
         )
     ));
 }

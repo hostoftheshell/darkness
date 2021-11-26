@@ -1,0 +1,9 @@
+plugins/query-monitor/
+plugins/show-current-template/
+plugins/regenerate-thumbnails/
+plugins/wp-sync-db-1.5/
+
+plugins/index.php
+plugins/hello.php
+
+gulp-dev/

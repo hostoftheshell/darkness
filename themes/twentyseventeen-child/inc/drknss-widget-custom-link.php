@@ -72,9 +72,10 @@ GNU General Public License for more details.
         ?>
       
         <?php if($image): ?>
-           <img src="<?php echo esc_url($image); ?>" alt="">
-        <?php endif; ?>
-      
+         <a class='widget_image' href='<?php echo $instance['url']?>'>
+            <img src="<?php echo esc_url($image); ?>" alt="<?php echo esc_attr($title); ?>"></a>
+           <?php endif; ?>
+
         <?php
         echo $args['after_widget'];
         ob_end_flush();

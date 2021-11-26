@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Register custom taxonomy which applies to attachments
  * 
@@ -20,13 +19,52 @@ function dkrnss_add_saison_taxonomy() {
 
     );
     $args = array(
-        'labels' => $labels,
-        'hierarchical' => false,
-        'query_var' => 'true',
-        'rewrite' => 'true',
-        'show_admin_column' => 'true',
+        'labels'            => $labels,
+        'hierarchical'      => false,
+        'query_var'         => true,
+        'rewrite'           => true,
+        'show_admin_column' => true,
     );
  
     register_taxonomy( 'saison', 'attachment', $args );
 }
 add_action( 'init', 'dkrnss_add_saison_taxonomy' );
+
+/**
+ * Register custom taxonomy which applies to pages
+ * 
+ */
+
+function dkrnss_add_type_taxonomy() {
+    $labels = array(
+        'name'              => 'Types de pages',
+        'singular_name'     => 'Type de page',
+        'all_items'         => 'All Types',
+        'parent_item'       => 'Parent Type',
+        'parent_item_colon' => 'Parent Type:',
+        'edit_item'         => 'Edit Type',
+        'update_item'       => 'Update Type',
+        'add_new_item'      => 'Add New Type',
+        'new_item_name'     => 'New Type Name',
+        'menu_name'         => 'Type',
+        
+
+    );
+    $args = array(
+        'labels'            => $labels,
+        'hierarchical'      => false,
+        'query_var'         => true,
+        'rewrite'           => array( 'slug' => 'drknss-feature' ),
+        'show_admin_column' => true,
+        'public'            => true,
+        // 'show_in_rest' => true,
+    );
+ 
+    register_taxonomy( 'type', 'page', $args );
+}
+add_action( 'init', 'dkrnss_add_type_taxonomy', 5 );
+
+
+
+
+

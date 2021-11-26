@@ -1,10 +1,10 @@
 === F4 Media Taxonomies ===
 Contributors: faktorvier
-Donate link: https://faktorvier.ch/
+Donate link: https://www.faktorvier.ch/donate/
 Tags: media, attachments, library, filter, bulk action, categories, tags, taxonomies, custom taxonomies, attachment, category, tag, taxonomy, custom taxonomy
 Requires at least: 4.5.0
-Tested up to: 4.9.6
-Stable tag: 1.0.4
+Tested up to: 5.5
+Stable tag: 1.0.11
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -111,6 +111,28 @@ Yes, absolutely!
 5. Filter by taxonomies in media insert overlay
 
 == Changelog ==
+
+= 1.0.11 =
+* Support WordPress 5.5
+
+= 1.0.10 =
+* Support WordPress 5.4
+
+= 1.0.9 =
+* Fix bottom bulk action button in media list
+
+= 1.0.8 =
+* Add CMB2 plugin support
+
+= 1.0.7 =
+* WordPress 5.3 compatibility fixes
+* Optimized dropdown width in media modal
+
+= 1.0.6 =
+* Update deprecated get_terms function
+
+= 1.0.5 =
+* Few PHP and JS code optimisations
 
 = 1.0.4 =
 * Fix customizer error

@@ -6,7 +6,7 @@
  *
  * @package WordPress
  * @subpackage Twenty_Nineteen
- * @since 1.0.0
+ * @since Twenty Nineteen 1.0
  */
 
 /**
@@ -74,6 +74,8 @@ if ( ! function_exists( 'twentynineteen_setup' ) ) :
 				'comment-list',
 				'gallery',
 				'caption',
+				'script',
+				'style',
 			)
 		);
 
@@ -138,23 +140,19 @@ if ( ! function_exists( 'twentynineteen_setup' ) ) :
 			)
 		);
 
-		$default_hue     = twentynineteen_get_default_hue();
-		$saturation      = apply_filters( 'twentynineteen_custom_colors_saturation', 100 );
-		$lightness       = apply_filters( 'twentynineteen_custom_colors_lightness', 33 );
-		$lightness_hover = apply_filters( 'twentynineteen_custom_colors_lightness_hover', 23 );
 		// Editor color palette.
 		add_theme_support(
 			'editor-color-palette',
 			array(
 				array(
-					'name'  => __( 'Primary', 'twentynineteen' ),
+					'name'  => 'default' === get_theme_mod( 'primary_color' ) ? __( 'Blue', 'twentynineteen' ) : null,
 					'slug'  => 'primary',
-					'color' => twentynineteen_hsl_hex( 'default' === get_theme_mod( 'primary_color' ) ? $default_hue : get_theme_mod( 'primary_color_hue', $default_hue ), $saturation, $lightness ),
+					'color' => twentynineteen_hsl_hex( 'default' === get_theme_mod( 'primary_color' ) ? 199 : get_theme_mod( 'primary_color_hue', 199 ), 100, 33 ),
 				),
 				array(
-					'name'  => __( 'Secondary', 'twentynineteen' ),
+					'name'  => 'default' === get_theme_mod( 'primary_color' ) ? __( 'Dark Blue', 'twentynineteen' ) : null,
 					'slug'  => 'secondary',
-					'color' => twentynineteen_hsl_hex( 'default' === get_theme_mod( 'primary_color' ) ? $default_hue : get_theme_mod( 'primary_color_hue', $default_hue ), $saturation, 23 ),
+					'color' => twentynineteen_hsl_hex( 'default' === get_theme_mod( 'primary_color' ) ? 199 : get_theme_mod( 'primary_color_hue', 199 ), 100, 23 ),
 				),
 				array(
 					'name'  => __( 'Dark Gray', 'twentynineteen' ),
@@ -226,8 +224,8 @@ function twentynineteen_scripts() {
 	wp_style_add_data( 'twentynineteen-style', 'rtl', 'replace' );
 
 	if ( has_nav_menu( 'menu-1' ) ) {
-		wp_enqueue_script( 'twentynineteen-priority-menu', get_theme_file_uri( '/js/priority-menu.js' ), array(), '1.1', true );
-		wp_enqueue_script( 'twentynineteen-touch-navigation', get_theme_file_uri( '/js/touch-keyboard-navigation.js' ), array(), '1.1', true );
+		wp_enqueue_script( 'twentynineteen-priority-menu', get_theme_file_uri( '/js/priority-menu.js' ), array(), '20181214', true );
+		wp_enqueue_script( 'twentynineteen-touch-navigation', get_theme_file_uri( '/js/touch-keyboard-navigation.js' ), array(), '20181231', true );
 	}
 
 	wp_enqueue_style( 'twentynineteen-print-style', get_template_directory_uri() . '/print.css', array(), wp_get_theme()->get( 'Version' ), 'print' );
@@ -276,16 +274,16 @@ add_action( 'enqueue_block_editor_assets', 'twentynineteen_editor_customizer_sty
  */
 function twentynineteen_colors_css_wrap() {
 
-	// Only bother if we haven't customized the color.
-	if ( 'default' === get_theme_mod( 'primary_color', 'default' ) && ! twentynineteen_has_custom_default_hue() ) {
+	// Only include custom colors in customizer or frontend.
+	if ( ( ! is_customize_preview() && 'default' === get_theme_mod( 'primary_color', 'default' ) ) || is_admin() ) {
 		return;
 	}
 
 	require_once get_parent_theme_file_path( '/inc/color-patterns.php' );
 
-	$primary_color = twentynineteen_get_default_hue();
+	$primary_color = 199;
 	if ( 'default' !== get_theme_mod( 'primary_color', 'default' ) ) {
-		$primary_color = get_theme_mod( 'primary_color_hue', $primary_color );
+		$primary_color = get_theme_mod( 'primary_color_hue', 199 );
 	}
 	?>
 
@@ -295,11 +293,6 @@ function twentynineteen_colors_css_wrap() {
 	<?php
 }
 add_action( 'wp_head', 'twentynineteen_colors_css_wrap' );
-
-/**
- * Default color filters.
- */
-require get_template_directory() . '/inc/color-filters.php';
 
 /**
  * SVG Icons class.
@@ -312,14 +305,19 @@ require get_template_directory() . '/classes/class-twentynineteen-svg-icons.php'
 require get_template_directory() . '/classes/class-twentynineteen-walker-comment.php';
 
 /**
- * Enhance the theme by hooking into WordPress.
+ * Common theme functions.
  */
-require get_template_directory() . '/inc/template-functions.php';
+require get_template_directory() . '/inc/helper-functions.php';
 
 /**
  * SVG Icons related functions.
  */
 require get_template_directory() . '/inc/icon-functions.php';
+
+/**
+ * Enhance the theme by hooking into WordPress.
+ */
+require get_template_directory() . '/inc/template-functions.php';
 
 /**
  * Custom template tags for the theme.
